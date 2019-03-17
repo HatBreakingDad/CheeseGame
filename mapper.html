@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Mapper</title>
+
+        <style>
+            body {margin: 0; overflow: hidden; background-color: rgb(15, 15, 15); display: flex}
+            #output {width: 100%; resize: none}
+            #canvas {border-bottom: 1px solid gray; border-right: 1px solid gray}
+            *.unselectable {user-select: none}
+            #tiles {display: flex; flex-direction: column}
+            #filler {height: 100%}
+            #selected {height: 25px}
+            #tileTypes {display: flex; flex-direction: column}
+        </style>
+    </head>
+
+    <body>
+        <canvas id="canvas"></canvas>
+        <!-- <div id="tiles">
+            <div id="selected"></div>
+            <div id="tileTypes">
+                <button id="tile1" onclick="tile(1)">1</button>
+                <button id="tile2" onclick="tile(2)">2</button>
+                <button id="tile3" onclick="tile(3)">3</button>
+                <button id="tile4" onclick="tile(4)">4</button>
+                <button id="tile5" onclick="tile(5)">5</button>
+                <button id="tile6" onclick="tile(6)">6</button>
+                <button id="tile7" onclick="tile(7)">7</button>
+                <button id="tile8" onclick="tile(8)">8</button>
+                <button id="tile9" onclick="tile(9)">9</button>
+            </div>
+            <div id="filler"></div>
+        </div> -->
+        <button onclick="create()" class="unselectable">Export</button>
+        <textarea id="output"></textarea>
+        <button onclick="load()" class="unselectable">Import</button>
+
+        <script>
+            var canvas = document.getElementById("canvas");
+            var ctx = canvas.getContext("2d");
+
+            grid = {
+                rows: 32,
+                cols: 15
+            }
+
+            let size = (Math.floor(window.innerHeight / grid.cols) + Math.floor(window.innerHeight / grid.rows)) / 2;
+
+            object = {
+                width: size,
+                height: size
+            }
+
+            canvas.width = object.width * grid.rows;
+            canvas.height = object.height * grid.cols;
+
+            // var tileTypes = {};
+
+            var tileType = 1;
+
+            var map = [];
+
+            for (r = 0; r < grid.rows; r++) {
+
+                let row = [];
+
+                for (c = 0; c < grid.cols; c++) {
+                    row.push(0);
+                }
+
+                map.push(row);
+            }
+
+            var mouse = {x: -10, y: -10, down: false};
+
+            document.addEventListener("mousemove", function(event) {mouse.x = event.x, mouse.y = event.y});
+
+            document.addEventListener("mousedown", function(event) {mouse.down = true});
+            document.addEventListener("mouseup", function(event) {mouse.down = false});
+
+            function create() {
+                document.getElementById("output").value = JSON.stringify(map).replace(/\r?\n|\r/g, "");
+            }
+
+            function load() {
+                try {
+                    map = JSON.parse(document.getElementById("output").value);
+                } catch {
+                    alert("Error, invalid JSON.");
+                }
+            }
+
+            // function tile(x) {}
+
+            function game() {
+                ctx.fillStyle = "rgb(0, 0, 0)";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                if (mouse.down) {
+                    let row = Math.floor(mouse.x / object.width);
+                    let col = Math.floor(mouse.y / object.height);
+                    console.log(row, col)
+
+                    if (map[row] && map[row][col] !== undefined) {
+                        if (map[row][col] === 0) {map[row][col] = tileType}
+                        else {map[row][col] = 0}
+
+                        document.getElementById("output").value = "";
+                    }
+
+                    mouse.down = false;
+                }
+
+                ctx.fillStyle = "rgb(255, 255, 255)";
+                ctx.strokeStyle = "rgb(150, 150, 150)";
+
+                for (row in map) {
+                    for (col in map[row]) {
+                        if (map[row][col] === 1) ctx.fillRect(row * object.width, col * object.height, object.width, object.height);
+                    }
+                }
+
+                for (r = 0; r < canvas.width; r += object.width) {
+                    ctx.beginPath();
+                    ctx.moveTo(r, 0);
+                    ctx.lineTo(r, canvas.height);
+                    ctx.stroke();
+                }
+
+                for (c = 0; c < canvas.height; c += object.height) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, c);
+                    ctx.lineTo(canvas.width, c);
+                    ctx.stroke();
+                }
+
+                requestAnimationFrame(game);
+            }
+
+            requestAnimationFrame(game);
+        </script>
+    </body>
+</html>
