@@ -15,6 +15,8 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
+            ctx.translate(0.5, 0.5);
+
             var utils = {
                 rectInRect: function(a, b, c) {
                     let distances = [
@@ -96,6 +98,8 @@
                     if (65 in game.input.keys) this.velocity.x += this.speed * game.time.delta;
                     if (68 in game.input.keys) this.velocity.x -= this.speed * game.time.delta;
 
+                    this.rotation = Math.atan2(game.input.mouse.y - canvas.height / 2, game.input.mouse.x - canvas.width / 2);
+
                     this.x += this.velocity.x * game.time.delta;
                     this.y += this.velocity.y * game.time.delta;
 
@@ -142,14 +146,10 @@
                             init: function() {
                                 this.creation = Date.now();
 
-                                this.rotation = Math.atan2(game.input.mouse.y - canvas.height / 2, game.input.mouse.x - canvas.width / 2);
+                                this.rotation = player.rotation;
 
-                                // let degrees = this.rotation * 180 / Math.PI;
-
-                                // if (degrees < 0) degrees += 360;
-
-                                // this.x += player.radius * Math.sin(degrees);
-                                // this.y += player.radius * Math.cos(degrees);
+                                this.x += player.radius * Math.sin(this.rotation) - this.radius;
+                                this.y += player.radius * Math.cos(this.rotation) - this.radius;
 
                                 this.velocity.x = Math.cos(this.rotation) * this.speed;
                                 this.velocity.y = Math.sin(this.rotation) * this.speed;
@@ -172,7 +172,7 @@
                                 this.x += this.velocity.x * game.time.delta;
                                 this.y += this.velocity.y * game.time.delta;
 
-                                if (Date.now() - this.creation > 1000) {
+                                if (Date.now() - this.creation > 5000) {
                                     this.opacity -= game.time.delta / 25;
 
                                     if (this.opacity <= 0) {
@@ -183,21 +183,28 @@
                             draw: function() {
                                 if (!this.visible) return;
 
-                                ctx.fillStyle = `rgba(255, 255, 0, ${this.opacity})`;
                                 ctx.beginPath();
                                 ctx.arc(this.x + player.x, this.y + player.y, this.radius, 0, Math.PI * 2);
                                 ctx.closePath();
+                                ctx.fillStyle = `rgba(255, 255, 0, ${this.opacity})`;
                                 ctx.fill();
                             }
                         });
                     }
                 },
                 draw: function() {
-                    ctx.fillStyle = "rgb(0, 0, 255)";
                     ctx.beginPath();
                     ctx.arc(canvas.width / 2, canvas.height / 2, this.radius, 0, Math.PI * 2);
                     ctx.closePath();
+                    ctx.fillStyle = "rgb(0, 0, 255)";
                     ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.moveTo(canvas.width / 2, canvas.height / 2);
+                    ctx.lineTo(canvas.width / 2 + this.radius * Math.cos(this.rotation), canvas.height / 2 + this.radius * Math.sin(this.rotation));
+                    ctx.closePath();
+                    ctx.strokeStyle = "rgb(0, 0, 0)";
+                    ctx.stroke();
                 }
             });
 
@@ -230,6 +237,7 @@
                 document.addEventListener("resize", function(event) {
                     canvas.width = window.innerWidth;
                     canvas.height = window.innerHeight;
+                    ctx.translate(0.5, 0.5);
                 });
 
                 for (row in game.map) {
@@ -296,6 +304,10 @@
 
                 ws.onopen = function() {
                     console.log("Connected to " + ws.url);
+
+                    send({
+                        type: "CONNECT"
+                    });
                 }
 
                 ws.onmessage = function(message) {
@@ -309,20 +321,27 @@
                         case "CONNECTED":
                             console.log("AUTH", data);
 
-                            game.token = data.token;
+                            // game.token = data.token;
 
                             break;
-                        case 
+                        case "UPDATE":
+                            console.log("UPDATE", data);
                     }
                 }
 
                 ws.onclose = function() {
                     console.log("Lost connection to " + ws.url);
 
-                    game.reconnect = setTimeout(connect, 5000);
+                    game.reconnect = setTimeout(connect, 50);
                 }
 
                 game.ws = ws;
+            }
+
+            function send(message) {
+                if (!game.ws) return;
+
+                game.ws.send(JSON.stringify(message));
             }
 
             window.onload = function() {

@@ -12,13 +12,15 @@ wss.on("connection", ws => {
 
         switch (data.type) {
             case "CONNECT":
-                console.log("AUTH", data);
+                console.log("CONNECT", data);
 
-
+                send
 
                 break;
             case "UPDATE":
-                console.log("PLAYER_UPDATE", data);
+                console.log("UPDATE", data);
+
+                // update
         }
 
         console.log(message);
@@ -30,3 +32,34 @@ wss.on("connection", ws => {
         }
     });
 });
+
+function send(ws, message) {
+    ws.send(JSON.stringify(message));
+}
+
+function broadcast(message) {
+    wss.clients.forEach(ws => {
+        if (ws.id) {
+            send(ws, message);
+        }
+    });
+}
+
+var time = Date.now();
+var last = time;
+var game = {
+    time: 0,
+    last: 0,
+    players: {}
+}
+
+function update() {
+    time = Date.now();
+    var delta = time - last;
+
+    // game
+
+    last = Date.now();
+}
+
+setInterval(update, 30);
