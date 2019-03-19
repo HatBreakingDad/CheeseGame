@@ -40,6 +40,22 @@
                     }
 
                     return collision;
+                },
+
+                pointInRect: function(a, b) {
+                    return a.x <= b.x && b.x <= a.x + a.width && a.y <= b.y && b.y <= a.y + a.height;
+                },
+
+                circleInCircle: function(a, b, c) {
+                    let distance = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
+
+                    if (distance <= a.radius + b.radius) {
+                        if (c) return true;
+
+                        return {depth: distance};
+                    }
+
+                    return false;
                 }
             }
 
@@ -113,6 +129,7 @@
                         let player = this;
 
                         new Object({
+                            tags: ["bullet"],
                             x: canvas.width / 2 - player.x,
                             y: canvas.height / 2 - player.y,
                             z: -1,
@@ -120,7 +137,7 @@
                             height: 16,
                             radius: 8,
                             velocity: {x: 0, y: 0},
-                            speed: 3,
+                            speed: 5,
                             opacity: 1,
                             init: function() {
                                 this.creation = Date.now();
@@ -152,11 +169,11 @@
                                     }
                                 }
 
-                                this.x += this.velocity.x;
-                                this.y += this.velocity.y;
+                                this.x += this.velocity.x * game.time.delta;
+                                this.y += this.velocity.y * game.time.delta;
 
-                                if (Date.now() - this.creation > 5000) {
-                                    this.opacity -= 0.05;
+                                if (Date.now() - this.creation > 1000) {
+                                    this.opacity -= game.time.delta / 25;
 
                                     if (this.opacity <= 0) {
                                         this.destroy = true;
@@ -265,7 +282,7 @@
                 }
 
                 for (object of game.world) {
-                    object.update();
+                    if (game.time.delta < 50) object.update();
                     object.draw();
                 }
 
@@ -274,7 +291,42 @@
                 requestAnimationFrame(loop);
             }
 
+            function connect() {
+                var ws = new WebSocket("ws://localhost:8080");
+
+                ws.onopen = function() {
+                    console.log("Connected to " + ws.url);
+                }
+
+                ws.onmessage = function(message) {
+                    try {
+                        var data = JSON.stringify(message.data);
+                    } catch {
+                        return console.log;
+                    }
+
+                    switch (data.type) {
+                        case "CONNECTED":
+                            console.log("AUTH", data);
+
+                            game.token = data.token;
+
+                            break;
+                        case 
+                    }
+                }
+
+                ws.onclose = function() {
+                    console.log("Lost connection to " + ws.url);
+
+                    game.reconnect = setTimeout(connect, 5000);
+                }
+
+                game.ws = ws;
+            }
+
             window.onload = function() {
+                connect();
                 init();
                 requestAnimationFrame(loop);
             }
