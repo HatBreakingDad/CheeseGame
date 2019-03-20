@@ -71,6 +71,7 @@
                     keys: {}
                 },
                 world: [],
+                users: [],
                 sort: false
             }
 
@@ -148,8 +149,8 @@
 
                                 this.rotation = player.rotation;
 
-                                this.x += player.radius * Math.sin(this.rotation) - this.radius;
-                                this.y += player.radius * Math.cos(this.rotation) - this.radius;
+                                this.x += (player.radius - this.radius * 2) * Math.sin(this.rotation + 1.5708);
+                                this.y += (player.radius - this.radius * 2) * Math.cos(this.rotation - 1.5708);
 
                                 this.velocity.x = Math.cos(this.rotation) * this.speed;
                                 this.velocity.y = Math.sin(this.rotation) * this.speed;
@@ -283,6 +284,16 @@
                     }
                 }
 
+                game.users.forEach(user => {
+                    if (user.x === undefined) return;
+
+                    ctx.beginPath();
+                    ctx.arc(-user.x + player.x + user.halfwidth, -user.y + player.y + user.halfheight, player.radius, 0, Math.PI * 2);
+                    ctx.closePath();
+                    ctx.fillStyle = "rgb(0, 255, 0)";
+                    ctx.fill(); 
+                });
+
                 for (object in game.world) {
                     if (game.world[object].destroy) {
                         game.world.splice(object, 1);
@@ -312,20 +323,35 @@
 
                 ws.onmessage = function(message) {
                     try {
-                        var data = JSON.stringify(message.data);
+                        var data = JSON.parse(message.data);
                     } catch {
                         return console.log;
                     }
 
                     switch (data.type) {
                         case "CONNECTED":
-                            console.log("AUTH", data);
+                            console.log("CONNECTED", data);
 
-                            // game.token = data.token;
+                            game.user_id = data.user_id;
+
+                            game.update = setInterval(function() {
+                                send({
+                                    type: "UPDATE",
+                                    x: player.x,
+                                    y: player.y,
+                                    velocity: player.velocity,
+                                    halfwidth: canvas.width / 2,
+                                    halfheight: canvas.height / 2
+                                });
+                            }, 30);
 
                             break;
                         case "UPDATE":
-                            console.log("UPDATE", data);
+                            // console.log("UPDATE", data);
+
+                            game.users = data.users;
+
+                            game.users.splice(data.user_id, 1);
                     }
                 }
 
@@ -341,12 +367,15 @@
             function send(message) {
                 if (!game.ws) return;
 
+                if (game.ws.readyState !== 1) return;
+
                 game.ws.send(JSON.stringify(message));
             }
 
             window.onload = function() {
                 connect();
                 init();
+
                 requestAnimationFrame(loop);
             }
         </script>
