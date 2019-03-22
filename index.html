@@ -229,13 +229,13 @@
 
                 document.addEventListener("mousemove", function(event) {
                     game.input.mouse.x = event.x;
-                    game.input.mouse.y = event.y
+                    game.input.mouse.y = event.y;
                 });
 
                 document.addEventListener("mousedown", function(event) {game.input.mouse.click = true});
                 document.addEventListener("mouseup", function(event) {game.input.mouse.click = false});
 
-                document.addEventListener("resize", function(event) {
+                window.addEventListener("resize", function(event) {
                     canvas.width = window.innerWidth;
                     canvas.height = window.innerHeight;
                     ctx.translate(0.5, 0.5);
@@ -285,7 +285,10 @@
                 }
 
                 game.users.forEach(user => {
-                    if (user.x === undefined) return;
+                    if (!user.x) return;
+
+                    user.x += user.velocity.x * game.time.delta;
+                    user.y += user.velocity.y * game.time.delta;
 
                     ctx.beginPath();
                     ctx.arc(-user.x + player.x + user.halfwidth, -user.y + player.y + user.halfheight, player.radius, 0, Math.PI * 2);
@@ -311,7 +314,8 @@
             }
 
             function connect() {
-                var ws = new WebSocket("ws://localhost:8080");
+                // var ws = new WebSocket("ws://localhost:8080");
+                var ws = new WebSocket(`ws://${window.location.hostname}:8080`);
 
                 ws.onopen = function() {
                     console.log("Connected to " + ws.url);
@@ -341,7 +345,11 @@
                                     y: player.y,
                                     velocity: player.velocity,
                                     halfwidth: canvas.width / 2,
-                                    halfheight: canvas.height / 2
+                                    halfheight: canvas.height / 2,
+                                    input: {
+                                        keys: game.input.keys,
+                                        moush: game.input.mouse
+                                    }
                                 });
                             }, 30);
 
@@ -365,11 +373,11 @@
             }
 
             function send(message) {
-                if (!game.ws) return;
-
-                if (game.ws.readyState !== 1) return;
-
-                game.ws.send(JSON.stringify(message));
+                if (game.ws) {
+                    if (game.ws.readyState === 1) {
+                        game.ws.send(JSON.stringify(message));
+                    }
+                }
             }
 
             window.onload = function() {

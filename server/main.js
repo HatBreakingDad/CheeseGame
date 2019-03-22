@@ -1,3 +1,17 @@
+// WebServer
+
+var express = require("express");
+var path = require("path");
+var app = express();
+
+app.get("/", (req, res) => {
+    res.sendFile(path.resolve("../index.html"));
+});
+
+app.listen(80);
+
+// WebSocket
+
 var WebSocket = require("ws");
 
 var wss = new WebSocket.Server({port: 8080});
@@ -21,22 +35,9 @@ wss.on("connection", ws => {
                 console.log("CONNECT", data);
 
                 game.users.push({
-                    // x: 0,
-                    // y: 0,
-                    // width: 100,
-                    // height: 100,
-                    // radius: 50,
-                    // stats: {
-                    //     kills: 0,
-                    //     deaths: 0
-                    // },
-                    // speed: 0.2,
-                    // friction: 1
-
                     id: game.users.length,
                     x: 0,
                     y: 0,
-
                     stats: {
                         kills: 0,
                         deaths: 0
