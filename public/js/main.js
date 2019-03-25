@@ -141,8 +141,8 @@ var player = new GameObject({
 
                     this.rotation = player.rotation;
 
-                    this.x += (player.radius - this.radius * 2) * Math.sin(this.rotation + 1.5708);
-                    this.y += (player.radius - this.radius * 2) * Math.cos(this.rotation - 1.5708);
+                    this.x += (player.radius - this.radius) * Math.sin(this.rotation + 1.5708); // 1.5708 = 90 degrees in radians
+                    this.y += (player.radius - this.radius) * Math.cos(this.rotation - 1.5708);
 
                     this.velocity.x = Math.cos(this.rotation) * this.speed;
                     this.velocity.y = Math.sin(this.rotation) * this.speed;
@@ -154,7 +154,7 @@ var player = new GameObject({
                         if (other.tags && other.tags.includes("solid")) {
                             if (utils.rectRect(this, other, false)) {
                                 if (other.health) {
-                                    other.health -= 10 / other.durability;
+                                    other.health -= 10 / other.durability ? other.durability : 10;
                                 }
 
                                 this.destroy = true;
@@ -226,6 +226,8 @@ function init() {
 
     window.addEventListener("mousedown", function(event) {game.input.mouse.click = true});
     window.addEventListener("mouseup", function(event) {game.input.mouse.click = false});
+
+    window.addEventListener("contextmenu", function(event) {event.preventDefault()});
 
     for (object of game.world) {
         object.init();
@@ -318,14 +320,31 @@ function connect() {
                                 height: game.settings.grid + 1,
                                 init: function() {
                                     this.health = 100;
+                                    this.durability = 35;
+
+                                    this.targetColor = 255;
+                                    this.color = 255;
+                                    this.colorSpeed = 1;
+                                },
+                                update: function() {
+                                    this.targetColor = 255 - (100 - this.health) * (255 / 100);
+
+                                    var adjustment = game.time.delta * (this.color - this.targetColor) / 10;
+
+                                    if (this.color < this.targetColor) this.color += adjustment;
+                                    if (this.color > this.targetColor) this.color -= adjustment;
+
+                                    if (this.health <= 0) this.health = 0;
+
+                                    if (this.color <= 10) this.destroy = true;
                                 },
                                 draw: function() {
-                                    ctx.fillStyle = `rgb(255, 255, 255)`;
+                                    ctx.fillStyle = `rgb(${this.color}, ${this.color}, ${this.color})`;
                                     ctx.fillRect(this.x + player.x, this.y + player.y, this.width, this.height);
 
-                                    ctx.fillStyle = "rgb(255, 0, 0)";
-                                    ctx.font = "16px Arial";
-                                    ctx.fillText(`${this.health}%`, this.x + player.x, this.y + player.y + 18);
+                                    // ctx.fillStyle = `rgb(255, 0, 0)`;
+                                    // ctx.font = "16px Arial";
+                                    // ctx.fillText(`Health: ${this.health}`, this.x + player.x, this.y + player.y + 16);
                                 }
                             });
                         }
