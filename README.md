@@ -2,16 +2,19 @@
 
 Very cool game.
 
-# Data Structures
+# Structures
 
 #### Player
 
 Field | Type | Description
 -|-|-
-x | float | the player's x position
-y | float | the player's y position
+x | number | the player's x position
+y | number | the player's y position
 velocity | object | the player's velocity
+input | object | the player's mouse and keyboard input
 items | array | list of the player's items
+halfwidth | number | half of the user's canvas width
+halfheight | number | half of the user's canvas height
 
 ```json
 {
@@ -28,11 +31,13 @@ Field | Type | Description
 -|-|-
 type | string | item type
 name | string | item name
-rarity | integer | rarity of the item
+rarity | number | rarity of the item
 
 # Events
 
 ## Client
+
+These are the events 
 
 #### PLAYER_UPDATE
 
@@ -55,15 +60,13 @@ mouse | object | the position and click status of the user's mouse
 
 Field | Type | Description
 -|-|-
-user_id | integer | the user's id
-lobby_id | integer | the id of the lobby the user is in
+user_id | number | the user's id
 players | object | list of players in the user's lobby
 
 ```json
 {
   "type": "READY",
   "user_id": 27,
-  "lobby_id": 4,
   "players": {
     "5": {"structure": "user"},
     "12": {"structure": "user"} 
@@ -79,9 +82,10 @@ players | object | list of players in the user's lobby
 
 ```json
 {
+  "type": "UPDATE",
   "players": {
-    "5": {"structure": "user"},
-    "12": {"structure": "user"}
+    "5": {},
+    "12": {}
   }
 }
 ```
@@ -93,7 +97,5 @@ players | object | list of players in the user's lobby
 Name | Value | Colour
 -|-|-
 Common | 10 | Gray
-Uncommon | 20 | Green
-Rare | 30 | Blue
-Epic | 40 | Purple
-Legendary | 50 | Orange
+Rare | 20 | Green
+Super Rare | 30 | Blue
