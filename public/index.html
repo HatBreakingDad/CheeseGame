@@ -94,10 +94,30 @@
                     this.lastShot = Date.now() - 300;
                 },
                 update: function() {
-                    if (87 in game.input.keys) this.velocity.y += this.speed * game.time.delta;
-                    if (83 in game.input.keys) this.velocity.y -= this.speed * game.time.delta;
-                    if (65 in game.input.keys) this.velocity.x += this.speed * game.time.delta;
-                    if (68 in game.input.keys) this.velocity.x -= this.speed * game.time.delta;
+                    // if (87 in game.input.keys) this.velocity.y += this.speed * game.time.delta;
+                    // if (83 in game.input.keys) this.velocity.y -= this.speed * game.time.delta;
+                    // if (65 in game.input.keys) this.velocity.x += this.speed * game.time.delta;
+                    // if (68 in game.input.keys) this.velocity.x -= this.speed * game.time.delta;
+
+                    if (87 in game.input.keys) send({
+                        type: "PLAYER_MOVE",
+                        direction: {x: 0, y: 1}
+                    });
+
+                    if (83 in game.input.keys) send({
+                        type: "PLAYER_MOVE",
+                        direction: {x: 0, y: -1}
+                    });
+
+                    if (65 in game.input.keys) send({
+                        type: "PLAYER_MOVE",
+                        direction: {x: 1, y: 1}
+                    });
+
+                    if (68 in game.input.keys) send({
+                        type: "PLAYER_MOVE",
+                        direction: {x: -1, y: 0}
+                    });
 
                     this.rotation = Math.atan2(game.input.mouse.y - canvas.height / 2, game.input.mouse.x - canvas.width / 2);
 
@@ -285,7 +305,10 @@
                 }
 
                 game.users.forEach(user => {
-                    if (!user.x) return;
+                    var count = 0;
+                    for (key in user) count++;
+
+                    if (count == 0) return;
 
                     user.x += user.velocity.x * game.time.delta;
                     user.y += user.velocity.y * game.time.delta;
@@ -305,6 +328,7 @@
 
                 for (object of game.world) {
                     if (game.time.delta < 50) object.update();
+
                     object.draw();
                 }
 

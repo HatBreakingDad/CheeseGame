@@ -5,7 +5,7 @@ var path = require("path");
 var app = express();
 
 app.get("/", (req, res) => {
-    res.sendFile(path.resolve("../index.html"));
+    res.sendFile(path.resolve("../public/index.html"));
 });
 
 app.listen(80);
